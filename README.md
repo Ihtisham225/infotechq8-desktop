@@ -21,6 +21,50 @@ without a token. It holds no secrets.
 | Automatic updates, installed on the next restart | `src/updater.js` (electron-updater, GitHub Releases) |
 | Installers: `.dmg` (Apple Silicon + Intel), `.exe` (Windows) | `package.json` → `build`, `.github/workflows/build.yml` |
 
+## Phase 2 — notifications and extras
+
+| Plan item | Where |
+| --- | --- |
+| A notification for each new email, registration and inquiry; clicking opens it | `src/notifier.js`, polling `GET /admin/desktop/notifications` every minute with the window's own login |
+| Follow-ups due: one reminder a day | the feed's `digest`; shown once per day (`src/settings.js` remembers it) |
+| Unread count on the Dock (Mac) / a dot on the taskbar (Windows) | `setBadge()` in `src/notifier.js`; opening the Inbox / lists resets it on the server |
+| Tray / menu bar: open, compose, inbox, quiet mode, start at login, quit | `src/tray.js` |
+| Compose from anywhere: ⌘⌥⇧E / Ctrl+Alt+Shift+E | `globalShortcut` in `src/main.js` |
+| Drag files onto an email to attach them | the website's Compose page (works in a browser too) |
+| Start at login, in the background | `src/login-item.js` (off until turned on) |
+
+## Open Word and PDF files with InfoTech
+
+InfoTech registers as an app that can open `.docx`, `.doc` and `.pdf` files
+(`build.fileAssociations`, as an *alternative* app, so Word and Preview/Acrobat stay
+the default unless someone chooses otherwise). Opening a file with InfoTech —
+right-click → Open With → InfoTech, or double-click once InfoTech is the default —
+brings up the admin's **Open a file** page (`src/opened-files.js`):
+
+- the page checks whether the library already has the file (even under another name)
+- and offers **Open the one in the library**, **Replace it** (new version) or **Keep both**
+- then shows the file with a preview and **Edit** for Word files.
+
+On a Mac the file arrives as an `open-file` event, on Windows as a command-line
+argument (to the running InfoTech via `second-instance`). Only the Open-a-file page
+on infotechq8.com can ask for the file, through `window.infotechDesktop.takeOpenedFile()`.
+
+**Make InfoTech the default:** Mac — select a .docx, ⌘I, *Open with: InfoTech*, *Change
+All…*. Windows — right-click a .docx → Open with → Choose another app → InfoTech, tick
+*Always use this app*.
+
+## Editing in Google Docs
+
+**Edit** on a Word file opens the Google Doc in an InfoTech window (`src/google-docs.js`):
+its own storage (separate from the InfoTech login), a plain-Chrome identity, no bridge
+to the app, and only docs.google.com inside it. No Google sign-in is needed: the
+website shares the document by link only while it is being edited.
+
+Closing the window keeps InfoTech running (Mac and Windows) so notifications keep
+arriving; quit from the app menu or the tray. Quiet Mode stops pop-ups but keeps the
+badge. The feed needs the website from infotechq8 PR #24 or later; against an older
+server the app simply shows no notifications.
+
 Shortcuts: ⌘N / Ctrl+N Compose email · ⌘1 Dashboard · ⌘2 Inbox · ⌘3 Compose ·
 ⌘[ / ⌘] back and forward · ⌘P print.
 
@@ -37,7 +81,7 @@ notifications, full screen).
 ```bash
 npm install
 npm start                 # opens the live admin
-npm run dev               # opens http://127.0.0.1:8000/dashboard (php artisan serve)
+npm run dev               # opens http://127.0.0.1:8000/dashboard (php artisan serve), with its own profile
 ```
 
 `INFOTECH_URL=<url> npm start` points a dev run anywhere; packaged builds always

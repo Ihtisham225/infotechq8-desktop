@@ -3,11 +3,28 @@
 const { app, Menu, shell, BrowserWindow } = require('electron');
 const { paths } = require('./config');
 const updater = require('./updater');
+const settings = require('./settings');
+const loginItem = require('./login-item');
 
 const isMac = process.platform === 'darwin';
 
-function build({ go }) {
+function build({ go, settingsChanged = () => {} }) {
   const focused = () => BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
+
+  const preferences = [
+    {
+      label: 'Quiet Mode',
+      type: 'checkbox',
+      checked: !!settings.get('quiet'),
+      click: (item) => { settings.set('quiet', item.checked); settingsChanged(); },
+    },
+    {
+      label: 'Start at Login',
+      type: 'checkbox',
+      checked: loginItem.isEnabled(),
+      click: (item) => { loginItem.setEnabled(item.checked); settingsChanged(); },
+    },
+  ];
 
   const template = [
     ...(isMac ? [{
@@ -15,6 +32,8 @@ function build({ go }) {
       submenu: [
         { role: 'about' },
         { label: 'Check for Updates…', click: () => updater.checkNow(focused()) },
+        { type: 'separator' },
+        ...preferences,
         { type: 'separator' },
         { role: 'services' },
         { type: 'separator' },
@@ -32,6 +51,7 @@ function build({ go }) {
         { type: 'separator' },
         { label: 'Print…', accelerator: 'CmdOrCtrl+P', click: () => focused()?.webContents.print() },
         { type: 'separator' },
+        ...(isMac ? [] : [...preferences, { type: 'separator' }]),
         isMac ? { role: 'close' } : { role: 'quit' },
       ],
     },
