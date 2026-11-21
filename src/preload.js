@@ -12,4 +12,11 @@ contextBridge.exposeInMainWorld('infotechDesktop', {
   // The Word/PDF file opened with InfoTech from the computer, for the library's
   // "Open a file" page. The app only answers that page; anywhere else it's null.
   takeOpenedFile: () => ipcRenderer.invoke('opened-file:take'),
+  // App updates, for the pill in the corner (like UC-Ultra).
+  getUpdateState: () => ipcRenderer.invoke('update:state'),
+  onUpdateState: (callback) => {
+    ipcRenderer.invoke('update:state'); // tells the app this page shows the pill
+    ipcRenderer.on('update-state', (_event, state) => callback(state));
+  },
+  installUpdate: () => ipcRenderer.send('update:install'),
 });
