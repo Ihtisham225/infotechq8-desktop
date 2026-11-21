@@ -4,8 +4,9 @@ The InfoTech admin (`https://infotechq8.com/admin`) as a Mac and Windows app.
 All data and logic stay on the server; the app is a secure window onto it plus
 the things a browser tab can't do. Plan: *InfoTech Desktop App — Plan* (Claude Docs).
 
-This folder is self-contained so it can move to its own repository
-(`infotechq8-desktop`) as is: `.github/` here becomes that repo's root `.github/`.
+The website itself lives in the private `infotechq8` repository; this repository
+is public on purpose, so installed apps can read its GitHub Releases for updates
+without a token. It holds no secrets.
 
 ## Phase 1 — what's in it
 
@@ -64,9 +65,9 @@ The tag decides the version (`.github/scripts/version-from-tag.mjs`); the number
 release on start and every six hours, download it in the background and install it
 on the next quit.
 
-**The releases repository must be public** for electron-updater to read it
-without a token (the app's source holds no secrets). A private download page on
-the website can host the installers for the first install either way.
+Keep this repository public: electron-updater reads its releases without a
+token. A private download page on the website can host the installers for the
+first install either way.
 
 ### Signing (repository secrets)
 
