@@ -21,6 +21,23 @@ without a token. It holds no secrets.
 | Automatic updates, installed on the next restart | `src/updater.js` (electron-updater, GitHub Releases) |
 | Installers: `.dmg` (Apple Silicon + Intel), `.exe` (Windows) | `package.json` → `build`, `.github/workflows/build.yml` |
 
+## Phase 2 — notifications and extras
+
+| Plan item | Where |
+| --- | --- |
+| A notification for each new email, registration and inquiry; clicking opens it | `src/notifier.js`, polling `GET /admin/desktop/notifications` every minute with the window's own login |
+| Follow-ups due: one reminder a day | the feed's `digest`; shown once per day (`src/settings.js` remembers it) |
+| Unread count on the Dock (Mac) / a dot on the taskbar (Windows) | `setBadge()` in `src/notifier.js`; opening the Inbox / lists resets it on the server |
+| Tray / menu bar: open, compose, inbox, quiet mode, start at login, quit | `src/tray.js` |
+| Compose from anywhere: ⌘⌥⇧E / Ctrl+Alt+Shift+E | `globalShortcut` in `src/main.js` |
+| Drag files onto an email to attach them | the website's Compose page (works in a browser too) |
+| Start at login, in the background | `src/login-item.js` (off until turned on) |
+
+Closing the window keeps InfoTech running (Mac and Windows) so notifications keep
+arriving; quit from the app menu or the tray. Quiet Mode stops pop-ups but keeps the
+badge. The feed needs the website from infotechq8 PR #24 or later; against an older
+server the app simply shows no notifications.
+
 Shortcuts: ⌘N / Ctrl+N Compose email · ⌘1 Dashboard · ⌘2 Inbox · ⌘3 Compose ·
 ⌘[ / ⌘] back and forward · ⌘P print.
 
@@ -37,7 +54,7 @@ notifications, full screen).
 ```bash
 npm install
 npm start                 # opens the live admin
-npm run dev               # opens http://127.0.0.1:8000/dashboard (php artisan serve)
+npm run dev               # opens http://127.0.0.1:8000/dashboard (php artisan serve), with its own profile
 ```
 
 `INFOTECH_URL=<url> npm start` points a dev run anywhere; packaged builds always
