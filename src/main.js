@@ -122,6 +122,14 @@ function ready() {
     return openedFiles.take();
   });
 
+  // Update pill on InfoTech pages: the page asks for the state, and may ask to relaunch.
+  ipcMain.handle('update:state', (event) => (config.isInternal(event.senderFrame?.url || '') ? updater.listen(event.sender) : null));
+  ipcMain.on('update:install', (event) => {
+    if (!config.isInternal(event.senderFrame?.url || '')) return;
+    quitting = true;
+    updater.install();
+  });
+
   isReady = true;
   if (openedFiles.pending()) showOpenPage();
 }
@@ -140,6 +148,10 @@ function createMainWindow({ hidden = false } = {}) {
     title: 'InfoTech',
     backgroundColor: '#ffffff',
     icon: path.join(__dirname, 'assets', 'icon.png'),
+    // Mac: no title bar, like UC-Ultra. The window buttons sit in the admin's
+    // sidebar logo row (the website leaves room for them), and the top bar
+    // drags the window. Windows keeps its normal frame.
+    ...(isMac ? { titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 28, y: 37 } } : {}),
     show: false,
     webPreferences: webPreferences(),
   });
