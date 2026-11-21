@@ -49,6 +49,7 @@ const paths = {
   inbox: `${origin}/admin/mailbox/inbox`,
   compose: `${origin}/admin/emails/create`,
   feed: `${origin}/admin/desktop/notifications`,
+  openFile: `${origin}/admin/library/open`,
 };
 
 module.exports = { startUrl, origin, isInternal, canOpenExternally, paths };

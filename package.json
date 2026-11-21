@@ -25,6 +25,22 @@
       "src/**/*",
       "package.json"
     ],
+    "fileAssociations": [
+      {
+        "ext": ["docx", "doc"],
+        "name": "Word Document",
+        "description": "Word document",
+        "role": "Editor",
+        "rank": "Alternate"
+      },
+      {
+        "ext": "pdf",
+        "name": "PDF Document",
+        "description": "PDF document",
+        "role": "Viewer",
+        "rank": "Alternate"
+      }
+    ],
     "mac": {
       "category": "public.app-category.business",
       "icon": "build/icon.png",

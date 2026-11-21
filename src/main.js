@@ -1,7 +1,7 @@
 // InfoTech desktop: a secure window onto the live admin at infotechq8.com/admin.
 // All data and logic stay on the server; this shell adds what a browser tab can't.
 
-const { app, BrowserWindow, Notification, globalShortcut, session, shell } = require('electron');
+const { app, BrowserWindow, Notification, globalShortcut, ipcMain, session, shell } = require('electron');
 const path = require('node:path');
 const config = require('./config');
 const windowState = require('./window-state');
@@ -12,6 +12,8 @@ const updater = require('./updater');
 const notifier = require('./notifier');
 const tray = require('./tray');
 const loginItem = require('./login-item');
+const openedFiles = require('./opened-files');
+const googleDocs = require('./google-docs');
 
 const isMac = process.platform === 'darwin';
 const OFFLINE_PAGE = path.join(__dirname, 'offline.html');
@@ -45,11 +47,24 @@ app.setAboutPanelOptions({
 // to hide notices the app handles itself. Must be set before any window loads.
 app.userAgentFallback = `${app.userAgentFallback} InfoTechDesktop/${app.getVersion()}`;
 
-// One InfoTech at a time: opening it again brings the existing window forward.
+// Word / PDF files opened with InfoTech. On a Mac they arrive as 'open-file'
+// events (possibly before the app is ready); on Windows as command-line arguments.
+let isReady = false;
+app.on('open-file', (event, filePath) => {
+  event.preventDefault();
+  if (openedFiles.add(filePath) && isReady) showOpenPage();
+});
+openedFiles.fromArgv(process.argv).forEach(openedFiles.add);
+
+// One InfoTech at a time: opening it again (or opening a file with it) uses the running one.
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
-  app.on('second-instance', () => showMain());
+  app.on('second-instance', (_event, argv) => {
+    const files = openedFiles.fromArgv(argv).filter(openedFiles.add);
+    if (files.length) showOpenPage();
+    else showMain();
+  });
   app.whenReady().then(ready);
 }
 
@@ -98,6 +113,21 @@ function ready() {
   if (!globalShortcut.register(COMPOSE_SHORTCUT, () => navigate(config.paths.compose))) {
     console.warn('[shortcut] another app already uses', COMPOSE_SHORTCUT);
   }
+
+  // The "Open a file" page asks for the file the computer handed us. Only that
+  // page on infotechq8.com may ask, and it only ever gets files the person opened.
+  ipcMain.handle('opened-file:take', (event) => {
+    const url = event.senderFrame?.url || '';
+    if (!config.isInternal(url) || new URL(url).pathname !== new URL(config.paths.openFile).pathname) return null;
+    return openedFiles.take();
+  });
+
+  isReady = true;
+  if (openedFiles.pending()) showOpenPage();
+}
+
+function showOpenPage() {
+  navigate(config.paths.openFile);
 }
 
 function createMainWindow({ hidden = false } = {}) {
@@ -177,8 +207,14 @@ function guard(webContents) {
   });
 
   // target="_blank" and window.open: InfoTech pages (a PDF preview, a printable
-  // letter) open in a new app window; anything else goes to the browser.
+  // letter) open in a new app window, and so does the Google Docs editor the
+  // library opens for editing; anything else goes to the browser.
   webContents.setWindowOpenHandler(({ url }) => {
+    if (config.isInternal(webContents.getURL()) && googleDocs.isEditorUrl(url)) {
+      // Closing the editor brings InfoTech back, where "Save & close" is waiting.
+      googleDocs.openEditor(url, () => mainWindow && !mainWindow.isDestroyed() && showMain());
+      return { action: 'deny' };
+    }
     if (config.isInternal(url) && !url.startsWith('file:')) {
       return {
         action: 'allow',
