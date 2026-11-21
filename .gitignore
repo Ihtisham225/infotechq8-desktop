@@ -1,0 +1,4 @@
+node_modules/
+release/
+*.p8
+.DS_Store

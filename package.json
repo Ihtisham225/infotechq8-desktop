@@ -1,0 +1,72 @@
+{
+  "name": "infotech-desktop",
+  "private": true,
+  "version": "0.1.0",
+  "description": "InfoTech — desktop app for the InfoTech admin",
+  "author": "InfoTech Institute <support@infotechq8.com>",
+  "homepage": "https://infotechq8.com",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "INFOTECH_URL=http://127.0.0.1:8000/dashboard electron .",
+    "dist:mac": "electron-builder --mac --arm64 --x64 --publish never",
+    "dist:win": "electron-builder --win --publish never",
+    "dist:dir": "electron-builder --dir --publish never"
+  },
+  "build": {
+    "appId": "com.infotechq8.desktop",
+    "productName": "InfoTech",
+    "copyright": "Copyright © 2026 InfoTech Institute for Private Training",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.business",
+      "icon": "build/icon.png",
+      "target": [
+        { "target": "dmg", "arch": ["arm64", "x64"] },
+        { "target": "zip", "arch": ["arm64", "x64"] }
+      ],
+      "darkModeSupport": true,
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
+    },
+    "dmg": {
+      "title": "InfoTech ${version}",
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
+    },
+    "win": {
+      "icon": "build/icon.png",
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "InfoTech",
+      "artifactName": "${productName}-Setup-${version}.${ext}"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "Ihtisham225",
+      "repo": "infotechq8-desktop"
+    }
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.9"
+  },
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8"
+  }
+}
