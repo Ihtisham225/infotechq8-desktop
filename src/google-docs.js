@@ -1,4 +1,4 @@
-// Google Docs inside InfoTech, for editing library Word files.
+// Google Docs, Sheets and Slides inside InfoTech, for editing library documents.
 //
 // The admin shares the document "anyone with the link can edit" while it is
 // being edited, so this window needs no Google sign-in (Google blocks signing in
@@ -11,7 +11,8 @@ const contextMenu = require('./context-menu');
 const downloads = require('./downloads');
 
 const PARTITION = 'persist:google-docs';
-const EDITOR = /^https:\/\/docs\.google\.com\/document\/d\/[\w-]+\/edit/;
+// Docs, Sheets and Slides editors (the library opens any of them for editing).
+const EDITOR = /^https:\/\/docs\.google\.com\/(document|spreadsheets|presentation)\/d\/[\w-]+\/edit/;
 
 let prepared = false;
 
